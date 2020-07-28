@@ -1,0 +1,25 @@
+# Byte-compiled
+__pycache__/
+
+/.idea
+
+# Compiled files
+*.py[co]
+
+*.py?
+# anywhere/*.py<any char>, *.pyc OR *.pyo OR *.pyd, NOT *.py
+
+# C extensions
+*.so
+
+# Discord stuff
+config.py
+Chateau.sqlite
+Chateau.sqlite-journal
+*.json
+
+# Enviroments
+.env
+.venv
+env/
+venv/
