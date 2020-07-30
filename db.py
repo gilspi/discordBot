@@ -1,3 +1,6 @@
+# import asyncio
+# import asyncpg
+# from config import PGDATABASE, PGHOST, PGPORT, PGUSER, PGPASSWORD
 import sqlite3
 from typing import Dict, Tuple
 

@@ -16,7 +16,7 @@ __pycache__/
 config.py
 Chateau.sqlite
 Chateau.sqlite-journal
-*.json
+# *.json
 
 # Enviroments
 .env

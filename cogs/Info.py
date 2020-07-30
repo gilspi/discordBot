@@ -100,7 +100,7 @@ class Info(commands.Cog):
         channels = [f'Всего: **{len(ctx.guild.channels)}**',
                     f'Текстовых: **{len(ctx.guild.voice_channels)}**',
                     f'Голосовых: **{len(ctx.guild.text_channels)}**']
-
+        # FIXME добавить смайлы
         data = [('**Участники:**', f'{members[0]}\n{members[1]}\n{members[2]}', True),
                 ('**По статусам:**',
                  f':online:{statuses[0]}\n:status_offline:{statuses[1]}\n:Idle_Status:{statuses[2]}\n:DND_Status:{statuses[3]}\n:invisible:{statuses[4]}',
@@ -115,15 +115,19 @@ class Info(commands.Cog):
         embed.set_thumbnail(url=ctx.guild.icon_url)
         await ctx.send(embed=embed)
 
-    @info.command(name='roles', aliases=['роли'], description=description.ROLE_INFO, help=description.ROLE_INFO)
-    async def receives_role_info(self, ctx):
-        embed = self.create_embed(title=f'Роли сервера {ctx.guild.name}',
+    @info.command(name='role', aliases=['роль'], description=description.ROLE_INFO, help=description.ROLE_INFO)
+    async def receives_role_info(self, ctx, role: discord.Role):
+        embed = self.create_embed(title=f'Информация о {role.mention}',
                                   description='',
                                   timestamp=ctx.message.created_at,
                                   colour=self.orange)
-        roles = '\n'.join([role.mention for role in ctx.guild.roles][::-1])
-        data = [(f'**Всего:**', f'{len(ctx.guild.roles)}', True),
-                (f'**Дерево ролей:**', f'{roles}', False)]
+        # roles = '\n'.join([role.mention for role in ctx.guild.roles][::-1])
+        data = [(f'**Идентификатор роли:**', f'{role.id}', True),
+                (f'**Название роли:**', f'{role.name}', False),
+                (f'**Отображается ли роль отдельно от других участников:**', f'{"Да" if role.hoist else "Нет"}', False),
+                (f'**Позиция роли:**', f'{role.position}', False),
+                (f'**Интеграции:**', f'{"Да" if role.managed else "Нет"}', False),
+                (f'**Могут ли пользователи упоминать эту роль:**', f'{"Да" if role.mentionable else "Нет"}', False)]
         for name, value, inline in data:
             embed.add_field(name=name, value=value, inline=inline)
         embed.set_thumbnail(url=ctx.guild.icon_url)

@@ -15,7 +15,7 @@ class Casino(commands.Cog):
         self.db = Database()
         self._range = ['1-2', '3-4', '5-6', '7-8']
         self.error = discord.Colour.red()
-        self.magenta = discord.Colour.dark_magenta()
+        self.black = discord.Colour.from_rgb(0, 0, 0)
         self.arrows = {1: '↖',
                        2: '⬆',
                        3: '↗',
@@ -25,11 +25,11 @@ class Casino(commands.Cog):
                        7: '↙',
                        8: '⬅'}
 
-    async def displays_error(self, ctx, description):
-        embed = discord.Embed(description=description,
+    async def displays_error(self, message, desc):
+        embed = discord.Embed(description=desc,
                               colour=self.error)
-        embed.set_author(name=ctx.author.name, icon_url=ctx.author.avatar_url)
-        await ctx.send(embed=embed)
+        embed.set_author(name=message.author.name, icon_url=message.author.avatar_url)
+        await message.channel.send(embed=embed)
 
     def create_embed(self, rate: int, is_win: bool, arrow, factor: float = None, winnings: float = None,
                      money: float = None):
@@ -40,15 +40,15 @@ class Casino(commands.Cog):
                 '5': '5️⃣',
                 '6': '6️⃣',
                 '7': '7️⃣',
-                '8': '9️⃣'}  # FIXME исправить на 8
+                '8': '8️⃣'}
         embed = discord.Embed(title='Casino',
                               description='',
-                              colour=self.magenta)
+                              colour=self.black)
         data = [('**Ставка:**', rate, True),
                 (f'{"**Остаток на счете:**" if factor is None else "**Множитель:**"}',
                  f'{money if factor is None else factor}', False),
                 (f'{"**Выигрыш:**" if is_win else "**Проигрыш:**"}',
-                 f'{"**Не везет, попробуй еще раз!**" if winnings is None else winnings}', False),
+                 f'{"**Не везет, попробуй еще раз!**" if not is_win else winnings}', False),
                 ('**Рулетка**',
                  f'{nums["1"]}{nums["2"]}{nums["3"]}\n{nums["8"]}{arrow}{nums["4"]}\n{nums["7"]}{nums["6"]}{nums["5"]}',
                  False)]
@@ -67,77 +67,57 @@ class Casino(commands.Cog):
         arrow = self.arrows[key]
         return arrow
 
+    def calculates(self, money, is_win: bool, arrow: str, rate: Union[int, float], factor: Union[int, float] = None):
+        if is_win:
+            winnings = rate * factor
+            money += winnings
+            embed = self.create_embed(rate, is_win, arrow, factor, winnings)
+        else:
+            money -= rate  # Текущий баланс, с учетом ставки.
+            embed = self.create_embed(rate, is_win, arrow, money=money)
+        return embed
+
     @commands.command(name='casino', aliases=['казино'],
                       description=description.CASINO, help=description.CASINO)
     @commands.has_permissions(send_messages=True)
     @commands.cooldown(1, 5, type=BucketType.user)
-    async def show_casino(self, ctx, range_: str, rate: Union[int, float]):
+    async def show_casino(self, ctx, _range: str, rate: Union[int, float]):
         money = self.db.select_one('users',
                                    ('money',),
                                    {'gid': ctx.guild.id,
                                     'uid': ctx.author.id})[0]
-        r = self.counts_zeros(rate)
-        if rate is None or not isinstance(rate, (int, float)) or len(r) > 2 or rate < 0 or money < rate:
+        after_comma = self.counts_zeros(rate)
+        if _range not in self._range:
+            await self.displays_error(ctx.message,
+                                      f'Введенный диапазон({_range}) не соответствует ни одному из возможных({self._range}).')
+        if rate is None or not isinstance(rate, (int, float)) or rate < 0 or money < rate or len(after_comma) > 2:
             raise errors.BadArgument
-        if range_ not in self._range:
-            embed = discord.Embed(title='Ошибка!',
-                                  description=f'Введенный диапазон({range_}) не соответствует не одному из возможных({self._range}).',
-                                  colour=self.error)
-            await ctx.send(embed=embed)
         arrow = self.returns_a_random_arrow()
-        print(arrow, 'AR')
-        is_win = False
-        if range_ == '1-2' and (arrow == self.arrows[1] or arrow == self.arrows[2]):
-            is_win = True
-            factor = 1.5
-            winnings = rate * factor
-            money += winnings
-            embed = self.create_embed(rate, is_win, arrow, factor, winnings)
-            print(f'Ставка-{rate}\nМножитель-{factor}\nВыигрыш-{winnings}.')
-        elif range_ == '3-4' and (arrow == self.arrows[3] or arrow == self.arrows[4]):
-            is_win = True
-            factor = 2.0
-            winnings = rate * factor
-            money += winnings
-            embed = self.create_embed(rate, is_win, arrow, factor, winnings)
-            print(f'Ставка-{rate}\nМножитель-{factor}\nВыигрыш-{winnings}.')
-        elif range_ == '5-6' and (arrow == self.arrows[5] or arrow == self.arrows[6]):
-            is_win = True
-            factor = 3.0
-            winnings = rate * factor
-            embed = self.create_embed(rate, is_win, arrow, factor, winnings)
-            money += winnings
-            print(f'Ставка-{rate}\nМножитель-{factor}\nВыигрыш-{winnings}.')
-        elif range_ == '7-8' and (arrow == self.arrows[7] or arrow == self.arrows[8]):
-            is_win = True
-            factor = 5.0
-            winnings = rate * factor
-            money += winnings
-            embed = self.create_embed(rate, is_win, arrow, factor, winnings)
-            print(f'Ставка-{rate}\nМножитель-{factor}\nВыигрыш-{winnings}.')
+        if _range == '1-2' and (arrow == self.arrows[1] or arrow == self.arrows[2]):
+            embed_ = self.calculates(money, True, arrow, rate, 1.5)
+        elif _range == '3-4' and (arrow == self.arrows[3] or arrow == self.arrows[4]):
+            embed_ = self.calculates(money, True, arrow, rate, 2)
+        elif _range == '5-6' and (arrow == self.arrows[5] or arrow == self.arrows[6]):
+            embed_ = self.calculates(money, True, arrow, rate, 3)
+        elif _range == '7-8' and (arrow == self.arrows[7] or arrow == self.arrows[8]):
+            embed_ = self.calculates(money, True, arrow, rate, 5)
         else:
-            print(is_win, 'ELSE')
-            print(money, 'MONEY BEFORE')
-            money -= rate  # Текущий баланс, с учетом ставки.
-            print(money, 'MONEY AFTER')
-            embed = self.create_embed(rate, is_win, arrow, money=money)
-            print(f'Ставка не сыграла\nВы проиграл {rate}!\nТекуший баланс {money}\n')
-        print(is_win, 'OUTER')
+            embed_ = self.calculates(money, False, arrow, rate)
+        await ctx.send(embed=embed_)
         self.db.update('users',
                        {'money': money},
                        {'gid': ctx.guild.id,
                         'uid': ctx.author.id})
         self.db.commit()
-        await ctx.send(embed=embed)
 
     @show_casino.error
     async def show_casino_error(self, ctx, error):
         if isinstance(error, errors.MissingRequiredArgument):
-            await self.displays_error(ctx, desc_errors['miss_req_arg'])
+            await self.displays_error(ctx.message, desc_errors['miss_req_arg'])
         if isinstance(error, errors.BadArgument):
-            await self.displays_error(ctx, 'Укажите корректные данные.\n'
-                                           'Введена некорректная ставка(слишком много нулей).\n'
-                                           'Ставка ДОЛЖНА БЫТЬ больше 0 или должна быть числом.', )
+            await self.displays_error(ctx.message, 'Укажите корректные данные.\n'
+                                                   'Введена некорректная ставка(пример ставки: 100.15).\n'
+                                                   'Ставка должна быть больше 0 или должна быть числом.', )
 
     @commands.Cog.listener()
     async def on_ready(self):

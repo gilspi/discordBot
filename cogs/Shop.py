@@ -18,11 +18,11 @@ class Shop(commands.Cog):
     async def on_ready(self):
         print(f'Shop загружен.')
 
-    async def displays_error(self, ctx, description):
+    async def displays_error(self, message, description):
         embed = discord.Embed(description=description,
                               colour=self.error)
-        embed.set_author(name=ctx.author.name, icon_url=ctx.author.avatar_url)
-        await ctx.send(embed=embed)
+        embed.set_author(name=message.author.name, icon_url=message.author.avatar_url)
+        await message.channel.send(embed=embed)
 
     def create_embed(self, title, description, isthumbnail: bool = True):
         embed = discord.Embed(title=title,
@@ -58,11 +58,11 @@ class Shop(commands.Cog):
     @creates_a_store.error
     async def creates_a_store_error(self, ctx, error):
         if isinstance(error, errors.MissingAnyRole):
-            await self.displays_error(ctx, desc_errors['miss_any_role'])
+            await self.displays_error(ctx.message, desc_errors['miss_any_role'])
         if isinstance(error, errors.MissingRequiredArgument):
-            await self.displays_error(ctx, desc_errors['miss_req_arg'])
+            await self.displays_error(ctx.message, desc_errors['miss_req_arg'])
         if isinstance(error, errors.BadArgument):
-            await self.displays_error(ctx, desc_errors['need_more'])
+            await self.displays_error(ctx.message, desc_errors['need_more'])
 
     @commands.command(name='add-product', aliases=['add-item', 'добавить-продукт'])
     @commands.has_any_role(owner_role_id, deputy_role_id, admin_role_id)
@@ -102,13 +102,13 @@ class Shop(commands.Cog):
     @adds_product.error
     async def adds_product_error(self, ctx, error):
         if isinstance(error, errors.MissingAnyRole):
-            await self.displays_error(ctx, desc_errors['miss_any_role'])
+            await self.displays_error(ctx.message, desc_errors['miss_any_role'])
         if isinstance(error, errors.MissingRequiredArgument):
-            await self.displays_error(ctx, desc_errors['miss_req_arg'])
+            await self.displays_error(ctx.message, desc_errors['miss_req_arg'])
         if isinstance(error, errors.BadArgument):
-            await self.displays_error(ctx, desc_errors['need_more+'])
+            await self.displays_error(ctx.message, desc_errors['need_more+'])
         if isinstance(error, exceptions.ShopNotFound):
-            await self.displays_error(ctx, desc_errors['shop_not_found'])
+            await self.displays_error(ctx.message, desc_errors['shop_not_found'])
 
     @commands.command(name='shop', aliases=['market', 'store', 'магазин'])
     @commands.has_permissions(send_messages=True)
@@ -134,9 +134,9 @@ class Shop(commands.Cog):
     @display_shop.error
     async def display_shop_error(self, ctx, error):
         if isinstance(error, errors.MissingRequiredArgument):
-            await self.displays_error(ctx, desc_errors['miss_req_arg'])
+            await self.displays_error(ctx.message, desc_errors['miss_req_arg'])
         if isinstance(error, exceptions.ShopNotFound):
-            await self.displays_error(ctx, desc_errors['shop_not_found'])
+            await self.displays_error(ctx.message, desc_errors['shop_not_found'])
 
     @display_shop.after_invoke
     async def reset_display_shop_cd(self, ctx):

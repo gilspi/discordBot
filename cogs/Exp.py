@@ -82,31 +82,33 @@ class Exp(commands.Cog):
 
     @commands.Cog.listener()
     async def on_message(self, message):
-        if not message.author.bot:
-            if message.channel.id != CHAT_CHANNEL and re.search(self.regex, message.content):
-                await message.delete()
-                await message.channel.send('Ты не можешь отправлять ссылки в этом канале.', delete_after=10)
+        if message.author.bot:
+            return
 
-            if message.channel.id != COMMAND_CHANNEL:
-                count_of_msg, money = self.db.select_one('users',
-                                                         ('messages', 'money'),
-                                                         {'gid': message.guild.id,
-                                                          'uid': message.author.id})
-                count_of_msg += 1
-                money += gives_out_coins()
-                self.db.update('users',
-                               {'money': money,
-                                'messages': count_of_msg},
-                               {'gid': message.guild.id,
-                                'uid': message.author.id})
-                self.db.commit()
+        if message.channel.id != CHAT_CHANNEL and re.search(self.regex, message.content):
+            await message.delete()
+            await message.channel.send('Ты не можешь отправлять ссылки в этом канале.', delete_after=10)
 
-                await self.adds_data(message.guild, message.author)
-                await self.add_experience(message.guild, message.author, 1)
-                await self.level_up(message.guild, message.author, message.channel)
+        if message.channel.id != COMMAND_CHANNEL:
+            count_of_msg, money = self.db.select_one('users',
+                                                     ('messages', 'money'),
+                                                     {'gid': message.guild.id,
+                                                      'uid': message.author.id})
+            count_of_msg += 1
+            money += gives_out_coins()
+            self.db.update('users',
+                           {'money': money,
+                            'messages': count_of_msg},
+                           {'gid': message.guild.id,
+                            'uid': message.author.id})
+            self.db.commit()
 
-            if message.channel.id != CHAT_CHANNEL and any([hasattr(attach, 'width') for attach in message.attachments]):
-                await message.delete()
+            await self.adds_data(message.guild, message.author)
+            await self.add_experience(message.guild, message.author, 1)
+            await self.level_up(message.guild, message.author, message.channel)
+
+        if message.channel.id != CHAT_CHANNEL and any([hasattr(attach, 'width') for attach in message.attachments]):
+            await message.delete()
 
     def cog_unload(self):
         self.adds_time_for_voice_min.cancel()

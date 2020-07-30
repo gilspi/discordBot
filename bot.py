@@ -1,5 +1,6 @@
 import discord
 import os
+import asyncpg
 from discord.ext import commands
 from config import settings, owner_role_id, deputy_role_id, admin_role_id
 import json
