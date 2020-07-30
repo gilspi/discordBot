@@ -13,7 +13,7 @@ __pycache__/
 *.so
 
 # Discord stuff
-config.py
+# config.py
 Chateau.sqlite
 Chateau.sqlite-journal
 # *.json
