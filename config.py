@@ -1,16 +1,18 @@
 import os
 from pathlib import Path
+from typing import Optional
+
 from dotenv import load_dotenv
 
 
 env_path = Path('.env')
 load_dotenv(dotenv_path=env_path)
 SECRET_KEY = os.getenv("SECRET_KEY")
-PGDATABASE = os.getenv("PGDATABASE", "postgres")
-PGHOST = os.getenv("PGHOST", "localhost")
-PGPORT = os.getenv("PGPORT", "2667")
-PGUSER = os.getenv("PGUSER", "postgres")
-PGPASSWORD = os.getenv("PGPASSWORD", "password")
+# PGDATABASE = os.getenv("PGDATABASE", "postgres")
+# PGHOST = os.getenv("PGHOST", "localhost")
+# PGPORT = os.getenv("PGPORT", "2667")
+# PGUSER = os.getenv("PGUSER", "postgres")
+# PGPASSWORD = os.getenv("PGPASSWORD", "password")
 
 settings = {
     'token': SECRET_KEY,
@@ -31,6 +33,8 @@ WELCOME_CHANNEL = 723636661334048768
 COMMAND_CHANNEL = 723539840796328051
 CHAT_CHANNEL = 723649994443456603
 IDEAS_CHANNEL = 723650807022616586
+GIVEAWAYS_CHANNEL = 739059254253846580
+WINNERS_CHANNEL = 739083130295812187  # FIXME проверить id
 
 # Message
 REACTION_MESSAGE = 731602150261653515

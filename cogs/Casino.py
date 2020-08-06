@@ -33,14 +33,14 @@ class Casino(commands.Cog):
 
     def create_embed(self, rate: int, is_win: bool, arrow, factor: float = None, winnings: float = None,
                      money: float = None):
-        nums = {'1': '1️⃣',
-                '2': '2️⃣',
-                '3': '3️⃣',
-                '4': '4️⃣',
-                '5': '5️⃣',
-                '6': '6️⃣',
-                '7': '7️⃣',
-                '8': '8️⃣'}
+        nums = {1: '1️⃣',
+                2: '2️⃣',
+                3: '3️⃣',
+                4: '4️⃣',
+                5: '5️⃣',
+                6: '6️⃣',
+                7: '7️⃣',
+                8: '8️⃣'}
         embed = discord.Embed(title='Casino',
                               description='',
                               colour=self.black)
@@ -50,7 +50,7 @@ class Casino(commands.Cog):
                 (f'{"**Выигрыш:**" if is_win else "**Проигрыш:**"}',
                  f'{"**Не везет, попробуй еще раз!**" if not is_win else winnings}', False),
                 ('**Рулетка**',
-                 f'{nums["1"]}{nums["2"]}{nums["3"]}\n{nums["8"]}{arrow}{nums["4"]}\n{nums["7"]}{nums["6"]}{nums["5"]}',
+                 f'{nums[1]}{nums[2]}{nums[3]}\n{nums[8]}{arrow}{nums[4]}\n{nums[7]}{nums[6]}{nums[5]}',
                  False)]
         for name, value, inline in data:
             embed.add_field(name=name, value=f'{value}', inline=inline)
@@ -121,7 +121,7 @@ class Casino(commands.Cog):
 
     @commands.Cog.listener()
     async def on_ready(self):
-        print('Casino загружен')
+        print('Casino загружен.')
 
 
 def setup(client):

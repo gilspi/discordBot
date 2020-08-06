@@ -1,11 +1,12 @@
-import json
-from typing import Union
-import discord
 import asyncio
 import re
-import description
+import json
+
+import discord
 from discord.ext import commands
 from discord.ext.commands import errors
+
+import description
 from config import owner_role_id, deputy_role_id, admin_role_id, moder_role_id
 from db import Database
 
@@ -18,23 +19,19 @@ class Admin(commands.Cog):
     def __init__(self, client):
         self._client = client
         self.db = Database()
-        self.red = discord.Colour.red()
-
-    @commands.Cog.listener()
-    async def on_ready(self):
-        print(f'Admin загружен.')
+        self.error_color = discord.Colour.red()
 
     @commands.command(name='change-prefix', aliases=['new-prefix'])
     @commands.has_any_role(owner_role_id, deputy_role_id, admin_role_id)
     async def change_the_prefix(self, ctx, prefix: str):
         with open('prefixes.json') as f:
+            await ctx.message.add_reaction('✅')
             prefixes = json.load(f)
 
         prefixes[str(ctx.guild.id)] = prefix
 
         with open('prefixes.json', 'w') as f:
             json.dump(prefixes, f, indent=4)
-        await ctx.message.add_reaction('✅')
 
     @commands.command(name='change-currency', aliases=['валюта', 'установить-валюту', 'изменить-валюту'],
                       description='', help='')
@@ -44,7 +41,7 @@ class Admin(commands.Cog):
 
     @commands.command(name='ban-user', aliases=['ban', 'бан', 'block', 'заблокировать'],
                       description=description.BAN, help=description.BAN)
-    @commands.has_any_role(owner_role_id, deputy_role_id, admin_role_id, moder_role_id)
+    @commands.has_any_role(owner_role_id, deputy_role_id, admin_role_id)
     async def ban_member(self, ctx, member: discord.Member, *, reason: str):
         await ctx.message.delete()
         await member.ban(reason=reason)
@@ -55,21 +52,21 @@ class Admin(commands.Cog):
         if isinstance(error, errors.MissingAnyRole):
             embed = discord.Embed(description='У вас нет соответствующих прав для использование этой команды!\n'
                                               'Необходимые права: `Банить участников`',
-                                  colour=self.red)
+                                  colour=self.error_color)
             embed.set_author(name=ctx.message.author.name,
                              icon_url=ctx.author.avatar_url)
             await ctx.send(embed=embed)
         if isinstance(error, errors.MissingRequiredArgument):
             embed = discord.Embed(description='Неправильный формат аргумента при вызове команды!\n'
                                               'Ожидался: `@member`, `reason: <строка>`,',
-                                  colour=self.red)
+                                  colour=self.error_color)
             embed.set_author(name=ctx.message.author.name,
                              icon_url=ctx.author.avatar_url)
             await ctx.send(embed=embed)
 
     @commands.command(name='unban-user', aliases=['unban', 'uu', 'разбан'],
                       description=description.UNBAN, help=description.UNBAN)
-    @commands.has_any_role(owner_role_id, deputy_role_id, admin_role_id, moder_role_id)
+    @commands.has_any_role(owner_role_id, deputy_role_id, admin_role_id)
     async def unban_member(self, ctx, *, member):
         await ctx.message.delete()
 
@@ -88,14 +85,14 @@ class Admin(commands.Cog):
         if isinstance(error, errors.MissingAnyRole):
             embed = discord.Embed(description='У вас нет соответствующих прав для использование этой команды!\n'
                                               'Необходимые права: `Банить участников`',
-                                  colour=self.red)
+                                  colour=self.error_color)
             embed.set_author(name=ctx.message.author.name,
                              icon_url=ctx.author.avatar_url)
             await ctx.send(embed=embed)
         if isinstance(error, errors.MissingRequiredArgument):
             embed = discord.Embed(description='И кого я должен достать из ban list?\n'
                                               'Ожидался: `member#mention`,',
-                                  colour=self.red)
+                                  colour=self.error_color)
             embed.set_author(name=ctx.message.author.name,
                              icon_url=ctx.author.avatar_url)
             await ctx.send(embed=embed)
@@ -113,14 +110,14 @@ class Admin(commands.Cog):
         if isinstance(error, errors.MissingAnyRole):
             embed = discord.Embed(description='У вас нет соответствующих прав для использование этой команды!\n'
                                               'Необходимые права: `Выгонять участников`',
-                                  colour=self.red)
+                                  colour=self.error_color)
             embed.set_author(name=ctx.message.author.name,
                              icon_url=ctx.author.avatar_url)
             await ctx.send(embed=embed)
         if isinstance(error, errors.MissingRequiredArgument):
             embed = discord.Embed(description='Неправильный формат аргумента при вызове команды!\n'
                                               'Ожидались: `@member`, `reason: <строка>`,',
-                                  colour=self.red)
+                                  colour=self.error_color)
             embed.set_author(name=ctx.message.author.name,
                              icon_url=ctx.author.avatar_url)
             await ctx.send(embed=embed)
@@ -137,30 +134,29 @@ class Admin(commands.Cog):
         if isinstance(error, errors.MissingAnyRole):
             embed = discord.Embed(description='У вас нет соответствующих прав для использование этой команды!\n'
                                               'Необходимые права: `Управлять сообщениями`',
-                                  colour=self.red)
+                                  colour=self.error_color)
             embed.set_author(name=ctx.message.author.name,
                              icon_url=ctx.author.avatar_url)
             await ctx.send(embed=embed)
         if isinstance(error, errors.BadArgument):
             embed = discord.Embed(description='Сбой при преобразовании в аргументе\n'
                                               'Ожидалось: `limit: <число>`,',
-                                  colour=self.red)
+                                  colour=self.error_color)
             embed.set_author(name=ctx.message.author.name,
                              icon_url=ctx.author.avatar_url)
             await ctx.send(embed=embed)
         if isinstance(error, errors.MissingRequiredArgument):
             embed = discord.Embed(description='Вы не указали количество сообщений к удалению\n'
                                               'Ожидался: `limit`,',
-                                  colour=self.red)
+                                  colour=self.error_color)
             embed.set_author(name=ctx.message.author.name,
                              icon_url=ctx.author.avatar_url)
             await ctx.send(embed=embed)
 
     @commands.command(name='mute-user', aliases=['mute', 'мут', 'замутить'],
                       description=description.MUTE, help=description.MUTE)
-    @commands.has_any_role(owner_role_id, deputy_role_id, admin_role_id)
-    async def mute_member(self, ctx, member: discord.Member, period: str, *,
-                          reason: str):  # FIXME reason будет храниться в БД
+    @commands.has_any_role(owner_role_id, deputy_role_id, admin_role_id, moder_role_id)
+    async def mute_member(self, ctx, member: discord.Member, period: str, *, reason: str):  # FIXME reason будет храниться в БД
         muted = discord.utils.get(ctx.guild.roles, id=725300743749500959)
         # role = discord.utils.get(ctx.guild.roles, name='unknown')
         # await member.remove_roles(role)
@@ -178,26 +174,33 @@ class Admin(commands.Cog):
         if isinstance(error, errors.MissingAnyRole):
             embed = discord.Embed(description='У вас нет соответствующих прав для использование этой команды!\n'
                                               'Необходимые права: `Управлять ролями`',
-                                  colour=self.red)
+                                  colour=self.error_color)
             embed.set_author(name=ctx.message.author.name, icon_url=ctx.message.author.avatar_url)
             await ctx.send(embed=embed)
         if isinstance(error, errors.MissingRequiredArgument):
             embed = discord.Embed(description='Неправильный формат аргумента при вызове команды!\n'
                                               'Ожидался: `member: @участник`, `period: <число><h>`, `reason: строка`',
-                                  colour=self.red)
+                                  colour=self.error_color)
             embed.set_author(name=ctx.message.author.name,
                              icon_url=ctx.author.avatar_url)
             await ctx.send(embed=embed)
 
-    @commands.command(name='edit-role', aliases=['редактирование-роли'],
+    '''@commands.command(name='edit-role', aliases=['редактирование-роли'],
                       description=description.EDIT_ROLE, help=description.EDIT_ROLE)
     @commands.has_any_role(owner_role_id, deputy_role_id, admin_role_id)
     async def edits_a_role(self, ctx, name, permissions, colour: Union[discord.Colour, int], position, reason):
         await self._client.edit(reason=reason, name=name, permissions=permissions, colour=colour, position=position)
+    '''
+
+
+    @commands.Cog.listener()
+    async def on_ready(self):
+        print(f'Admin загружен.')
 
 
 def setup(client):
     client.add_cog(Admin(client))
+
 
 
 '''        embed = discord.Embed(title='Title',

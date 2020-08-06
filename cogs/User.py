@@ -1,8 +1,12 @@
+import asyncio
 import random
+from typing import Optional
+
 import discord
 from discord.ext import commands
 from discord.ext.commands import BucketType
 from discord.ext.commands import errors
+
 from config import WHITELIST
 from db import Database
 import description
@@ -67,9 +71,9 @@ class User(commands.Cog):
             if role_id in [role.id for role in ctx.author.roles]:
                 self.display_level.reset_cooldown(ctx)
 
-    @commands.command(aliases=['balance', 'баланс'], description=description.BALANCE, help=description.BALANCE)
+    @commands.command(name='balance', aliases=['баланс'], description=description.BALANCE, help=description.BALANCE)
     @commands.has_permissions(send_messages=True)
-    async def _balance(self, ctx, member: discord.Member = None):
+    async def show_balance(self, ctx, member: discord.Member = None):
         await ctx.message.delete()
         user = member or ctx.author
         money, lvl, exp = self.db.select_one('users',
@@ -149,6 +153,53 @@ class User(commands.Cog):
         for role_id in WHITELIST:
             if role_id in [role.id for role in ctx.author.roles]:
                 self.transfers_money.reset_cooldown(ctx)
+
+    @staticmethod
+    async def create_rand_emoji_num():
+        nums = {0: '0',  # FIXME исправить на emoji(0)
+                1: '1️⃣',
+                2: '2️⃣',
+                3: '3️⃣',
+                4: '4️⃣',
+                5: '5️⃣',
+                6: '6️⃣',
+                7: '7️⃣',
+                8: '8️⃣',
+                9: '9'}  # FIXME исправить на emoji(9)
+        random.seed()
+        return nums[random.randrange(len(nums))]
+
+    @commands.command(name='roll', aliases=['ролл', 'крутить', 'spin', 'rolling'],
+                      description=description.ROLL, help=description.ROLL)
+    @commands.has_permissions(send_messages=True)
+    @commands.cooldown(1, 5, type=BucketType.user)
+    async def gen_rand_num(self, ctx):
+        hundred, ten, one = await self.create_rand_emoji_num(), await self.create_rand_emoji_num(), await self.create_rand_emoji_num()
+        await ctx.send('Роллиииммммм....', delete_after=3)
+        await asyncio.sleep(3)
+        await ctx.send(f'{hundred}{ten}{one}')
+
+    @gen_rand_num.after_invoke
+    async def reset_gen_rand_num_cd(self, ctx):
+        for role_id in WHITELIST:
+            if role_id in [role.id for role in ctx.author.roles]:
+                self.gen_rand_num.reset_cooldown(ctx)
+
+    @commands.command(name='spoiler', aliases=['спойлер'],
+                      description=description.SPOILER, help=description.SPOILER)
+    @commands.has_permissions(send_messages=True)
+    @commands.cooldown(1, 5, type=BucketType.user)
+    async def create_spoiler(self, ctx, *, text: str):
+        await ctx.message.delete()
+        await ctx.send(f'||{text}||')
+
+    @create_spoiler.after_invoke
+    async def reset_create_spoiler_cd(self, ctx):
+        for role_id in WHITELIST:
+            if role_id in [role.id for role in ctx.author.roles]:
+                self.create_spoiler.reset_cooldown(ctx)
+
+    # unflip, shrug, me, nick, tenor, giphy
 
 
 def setup(client):

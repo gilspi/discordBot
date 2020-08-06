@@ -73,6 +73,19 @@ class Events(commands.Cog):
         self.db.commit()
 
     @commands.Cog.listener()
+    async def on_message(self, message):
+        if message.author.bot:
+            return
+
+        embed = discord.Embed()
+        if message.content.isupper():
+            await message.delete()
+            embed.set_author(name=message.author.name, icon_url=message.author.avatar_url)
+            embed.description = 'Пожалуйста, не используйте Caps Lock в своих сообщениях!'
+            embed.colour = discord.Colour.red()
+            await message.channel.send(embed=embed, delete_after=10)
+
+    @commands.Cog.listener()
     async def on_command_error(self, ctx, error):
         if isinstance(error, errors.CommandOnCooldown):
             date = '{:<8}'.format(str(datetime.timedelta(seconds=round(error.retry_after))))

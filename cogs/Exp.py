@@ -3,7 +3,7 @@ import description
 from discord.ext import tasks, commands
 from discord.ext.commands import BucketType
 from db import Database
-from config import WHITELIST, CHAT_CHANNEL, COMMAND_CHANNEL
+from config import WHITELIST, CHAT_CHANNEL, COMMAND_CHANNEL, GIVEAWAYS_CHANNEL
 import random
 import re
 
@@ -85,11 +85,11 @@ class Exp(commands.Cog):
         if message.author.bot:
             return
 
-        if message.channel.id != CHAT_CHANNEL and re.search(self.regex, message.content):
+        if message.channel.id not in [CHAT_CHANNEL, GIVEAWAYS_CHANNEL] and re.search(self.regex, message.content):
             await message.delete()
             await message.channel.send('Ты не можешь отправлять ссылки в этом канале.', delete_after=10)
 
-        if message.channel.id != COMMAND_CHANNEL:
+        if message.channel.id not in [COMMAND_CHANNEL, GIVEAWAYS_CHANNEL]:
             count_of_msg, money = self.db.select_one('users',
                                                      ('messages', 'money'),
                                                      {'gid': message.guild.id,
@@ -107,7 +107,7 @@ class Exp(commands.Cog):
             await self.add_experience(message.guild, message.author, 1)
             await self.level_up(message.guild, message.author, message.channel)
 
-        if message.channel.id != CHAT_CHANNEL and any([hasattr(attach, 'width') for attach in message.attachments]):
+        if message.channel.id not in [CHAT_CHANNEL, GIVEAWAYS_CHANNEL] and any([hasattr(attach, 'width') for attach in message.attachments]):
             await message.delete()
 
     def cog_unload(self):

@@ -27,13 +27,13 @@ class Trans(commands.Cog):
     async def translates(self, ctx, languages: Optional[str], *, text: Optional[str]):
         src, dest = languages.split('-')
         trans = self.translator.translate(src=src, dest=dest, text=text)
-        embed = await self.create_embed(description='', field=[(f'{text}', trans.text, False)])
+        embed = await self.create_embed(description='', field=[(text, f'`{trans.text}`', False)])
         embed.set_footer(text=dest)
         await ctx.send(embed=embed)
 
     @commands.Cog.listener()
     async def on_ready(self):
-        print('Translator загружен')
+        print('Translator загружен.')
 
 
 def setup(client):
