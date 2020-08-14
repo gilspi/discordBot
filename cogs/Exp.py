@@ -176,17 +176,3 @@ class Exp(commands.Cog):
 
 def setup(client):
     client.add_cog(Exp(client))
-
-
-"""
-if message.content.startswith('$greet'):
-    # greet = choice(constant.GREETINGS)
-    channel = message.channel
-    await channel.send(f'{choice(GREETINGS)}')
-
-    def check(m):
-        return m.content.lower() in GREETINGS and m.channel == channel
-
-    msg = await self.client.wait_for('message', check=check)
-    await channel.send('{} {.author.mention}!'.format(choice(GREETINGS), msg))
-"""

@@ -156,7 +156,7 @@ class User(commands.Cog):
 
     @staticmethod
     async def create_rand_emoji_num():
-        nums = {0: '0',  # FIXME исправить на emoji(0)
+        nums = {0: '0️⃣',
                 1: '1️⃣',
                 2: '2️⃣',
                 3: '3️⃣',
@@ -165,7 +165,7 @@ class User(commands.Cog):
                 6: '6️⃣',
                 7: '7️⃣',
                 8: '8️⃣',
-                9: '9'}  # FIXME исправить на emoji(9)
+                9: '9️⃣'}
         random.seed()
         return nums[random.randrange(len(nums))]
 

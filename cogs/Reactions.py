@@ -28,9 +28,10 @@ class Reactions(commands.Cog):
     @commands.Cog.listener()
     async def on_raw_reaction_remove(self, payload):
         for guild in self._client.guilds:
-            member = guild.get_member(payload.user_id)
-            role = discord.utils.get(guild.roles, id=self.roles[payload.emoji.name])
-            await member.remove_roles(role, reason='Реакция для получения роли.', atomic=True)
+            if payload.message_id == REACTION_MESSAGE:
+                member = guild.get_member(payload.user_id)
+                role = discord.utils.get(guild.roles, id=self.roles[payload.emoji.name])
+                await member.remove_roles(role, reason='Реакция для получения роли.', atomic=True)
 
 
 def setup(client):

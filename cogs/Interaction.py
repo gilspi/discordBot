@@ -54,5 +54,6 @@ class Interaction(commands.Cog):
             if role_id in [role.id for role in ctx.author.roles]:
                 self.slap.reset_cooldown(ctx)
 
+
 def setup(client):
     client.add_cog(Interaction(client))
