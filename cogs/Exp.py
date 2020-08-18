@@ -119,7 +119,7 @@ class Exp(commands.Cog):
             return
         for guild in self._client.guilds:
             for voice_channel in guild.voice_channels:
-                # FIXME исправить на 1 для того, чтобы не было накрутки монет
+                # FIXME исправить на len() > 1 для того, чтобы не было накрутки монет
                 if voice_channel.id != 723635991646306306 and len(voice_channel.members) > 0:
                     for member in voice_channel.members:
                         voice_min, money = self.db.select_one('users',

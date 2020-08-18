@@ -6,7 +6,7 @@ from config import settings, WHITELIST
 
 
 def syntax(command):
-    cmd = settings['prefix'] + str(command.aliases[0])  # команда
+    cmd = settings['prefix'] + str(command.name)  # команда
     aliases = ' '.join([f'``{alias}``' for alias in command.aliases])  # псевдонимы
     params = []
     for key, value in command.params.items():
@@ -28,7 +28,7 @@ class Help(commands.Cog):
     async def custom(self, ctx, command):
         cmd, aliases, params = syntax(command)
         params = ' '.join(param for param in params)
-        embed = discord.Embed(title=f'Команда {command.aliases[0]}',
+        embed = discord.Embed(title=f'Команда {command.name}',
                               description='',
                               colour=ctx.author.colour)
         embed.set_thumbnail(url=self._client.user.avatar_url)

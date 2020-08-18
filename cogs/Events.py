@@ -1,10 +1,12 @@
-import datetime
 import json
+from datetime import timedelta
+from random import choice  # Для выбора случайного приветствия из списка
 
 import discord
 from discord.ext import commands
 from discord.ext.commands import errors
-from random import choice  # Для выбора случайного приветствия из списка
+
+
 from db import Database
 from phrases import greetings
 from config import settings, WELCOME_CHANNEL
@@ -88,7 +90,7 @@ class Events(commands.Cog):
     @commands.Cog.listener()
     async def on_command_error(self, ctx, error):
         if isinstance(error, errors.CommandOnCooldown):
-            date = '{:<8}'.format(str(datetime.timedelta(seconds=round(error.retry_after))))
+            date = '{:<8}'.format(str(timedelta(seconds=round(error.retry_after))))
             embed = discord.Embed(description='Вы еще не можете использовать эту команду!\n'
                                               f'Пожалуйста, подождите {date}c.')
             await ctx.send(embed=embed)

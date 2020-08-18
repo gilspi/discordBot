@@ -1,7 +1,9 @@
+import json
+
 import discord
 from discord.ext import commands
 from discord.ext.commands import BucketType
-from discord.ext.commands import errors
+
 import description
 from config import COMMAND_CHANNEL
 
@@ -15,7 +17,15 @@ class Info(commands.Cog):
         self.blue = discord.Colour.from_rgb(0, 174, 255)
         self.orange = discord.Colour.orange()
 
-    def create_embed(self, title, description, timestamp, colour=discord.Colour.red()):
+    @staticmethod
+    def get_prefix(client, message):
+        with open('prefixes.json') as f:
+            prefixes = json.load(f)
+
+        return prefixes[str(message.guild.id)]
+
+    @staticmethod
+    def create_embed(title, description, timestamp, colour=discord.Colour.red()):
         embed_ = discord.Embed(title=title,
                                description=description,
                                timestamp=timestamp,
@@ -28,7 +38,7 @@ class Info(commands.Cog):
                                    message.created_at)
         await channel.send(embed=embed_)
 
-    @commands.group(name='info', aliases=['about', 'инфо'])
+    @commands.group(name='info', aliases=['about', 'инфо'], description=description.INFO, help=description.INFO)
     @commands.has_permissions(send_messages=True)
     @commands.cooldown(1, 10, type=BucketType.user)
     async def info(self, ctx):
@@ -38,6 +48,7 @@ class Info(commands.Cog):
     @info.command(name='user', aliases=['me', 'i', 'я'],
                   description=description.USER_INFO, help=description.USER_INFO)
     async def receives_user_info(self, ctx, member: discord.Member = None):
+        await ctx.message.delete()
         if ctx.channel.id != COMMAND_CHANNEL:
             await ctx.message.delete()
             await self.show_error('Ошибка',
@@ -48,31 +59,29 @@ class Info(commands.Cog):
             self.receives_user_info.reset_cooldown(ctx)
             return
         user = member or ctx.author
-        embed = self.create_embed(title='',
+        embed = self.create_embed(title=f'Информация о {user}',
                                   description='',
                                   timestamp=ctx.message.created_at,
                                   colour=self.blue)
 
-        # FIXME создать список кортежей и итерироваться по ним.
         roles = [role.mention for role in user.roles][1:][::-1]
         embed.set_thumbnail(url=user.avatar_url)
-        embed.add_field(name='ID:', value=user.id, inline=False)
-        embed.add_field(name='Имя:', value=user.name, inline=False)
-        embed.add_field(name='Имя на сервере:', value=user.display_name, inline=False)
-        embed.add_field(name='Роли:', value=f'{" ".join(roles)}')
-        embed.add_field(name='Вступил на сервер:',
-                        value=f'{user.joined_at.strftime("%Y.%m.%d в %H:%M")}',
-                        inline=False)
-        embed.add_field(name='Создал аккаунт:',
-                        value=f'*{user.created_at.strftime("%Y.%m.%d в %H:%M")}*',
-                        inline=False)
-        embed.set_footer(text='Посмотри $help',
+        data = [('ID:', user.id, True),
+                ('Имя:', user.name, True),
+                ('Имя на сервере:', user.display_name, True),
+                ('Роли:', f'{" ".join(roles)}', True),
+                ('Вступил на сервер:', f'{user.joined_at.strftime("%Y.%m.%d в %H:%M")}', True),
+                ('Создал аккаунт:', f'*{user.created_at.strftime("%Y.%m.%d в %H:%M")}*', True)]
+        for name, value, inline in data:
+            embed.add_field(name=name, value=value, inline=inline)
+        embed.set_footer(text=f'Посмотри {self.get_prefix(self._client, ctx.message)}help',
                          icon_url=user.avatar_url)
         await ctx.send(embed=embed)
 
     @info.command(name='guild', aliases=['server', 'сервер', 'гильдия'],
                   description=description.GUILD_INFO, help=description.GUILD_INFO)
     async def receives_guild_info(self, ctx):
+        await ctx.message.delete()
         if ctx.channel.id != COMMAND_CHANNEL:
             await ctx.message.delete()
             await self.show_error('Ошибка',
@@ -100,16 +109,16 @@ class Info(commands.Cog):
         channels = [f'Всего: **{len(ctx.guild.channels)}**',
                     f'Текстовых: **{len(ctx.guild.voice_channels)}**',
                     f'Голосовых: **{len(ctx.guild.text_channels)}**']
-        # FIXME добавить смайлы
+
         data = [('**Участники:**', f'{members[0]}\n{members[1]}\n{members[2]}', True),
                 ('**По статусам:**',
-                 f':online:{statuses[0]}\n:status_offline:{statuses[1]}\n:Idle_Status:{statuses[2]}\n:DND_Status:{statuses[3]}\n:invisible:{statuses[4]}',
-                 False),
-                ('**Каналы:**', f'{channels[0]}\n{channels[1]}\n{channels[2]}', False),
-                ('**Владелец:**', f'{ctx.guild.owner.name}', False),
-                ('**Регион:**', f'{ctx.guild.region}', False),
-                ('**Уровень проверки:**', f'{ctx.guild.verification_level}', False),
-                ('**Дата создания:**', f'{ctx.guild.created_at.strftime("%Y.%m.%d в %H:%M")}', False)]
+                 f'В сети: **{statuses[0]}**\nНе в сети: **{statuses[1]}**\nНе активен: **{statuses[2]}**\n'
+                 f'Не беспокоить: **{statuses[3]}**\nНевидимый: **{statuses[4]}**', True),
+                ('**Каналы:**', f'{channels[0]}\n{channels[1]}\n{channels[2]}', True),
+                ('**Владелец:**', f'{ctx.guild.owner.name}', True),
+                ('**Регион:**', f'{ctx.guild.region}', True),
+                ('**Уровень проверки:**', f'{ctx.guild.verification_level}', True),
+                ('**Дата создания:**', f'{ctx.guild.created_at.strftime("%Y.%m.%d в %H:%M")}', True)]
         for name, value, inline in data:
             embed.add_field(name=name, value=value, inline=inline)
         embed.set_thumbnail(url=ctx.guild.icon_url)
@@ -117,17 +126,17 @@ class Info(commands.Cog):
 
     @info.command(name='role', aliases=['роль'], description=description.ROLE_INFO, help=description.ROLE_INFO)
     async def receives_role_info(self, ctx, role: discord.Role):
-        embed = self.create_embed(title=f'Информация о {role.mention}',
+        await ctx.message.delete()
+        embed = self.create_embed(title=f'Информация о роли: {role}',
                                   description='',
                                   timestamp=ctx.message.created_at,
                                   colour=self.orange)
-        # roles = '\n'.join([role.mention for role in ctx.guild.roles][::-1])
         data = [(f'**Идентификатор роли:**', f'{role.id}', True),
-                (f'**Название роли:**', f'{role.name}', False),
-                (f'**Отображается ли роль отдельно от других участников:**', f'{"Да" if role.hoist else "Нет"}', False),
-                (f'**Позиция роли:**', f'{role.position}', False),
-                (f'**Интеграции:**', f'{"Да" if role.managed else "Нет"}', False),
-                (f'**Могут ли пользователи упоминать эту роль:**', f'{"Да" if role.mentionable else "Нет"}', False)]
+                (f'**Название роли:**', f'{role.name}', True),
+                (f'**Отображается ли роль отдельно от других участников:**', f'{"Да" if role.hoist else "Нет"}', True),
+                (f'**Позиция роли:**', f'{role.position}', True),
+                (f'**Интеграции:**', f'{"Да" if role.managed else "Нет"}', True),
+                (f'**Могут ли пользователи упоминать эту роль:**', f'{"Да" if role.mentionable else "Нет"}', True)]
         for name, value, inline in data:
             embed.add_field(name=name, value=value, inline=inline)
         embed.set_thumbnail(url=ctx.guild.icon_url)
